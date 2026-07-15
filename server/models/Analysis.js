@@ -19,9 +19,51 @@ const analysisSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  resumeSkills: {
-    type: [String],
-    default: [],
+  resumeAnalysis: {
+    contact: {
+      name: String,
+      links: [String],
+    },
+    summary: String,
+    experience: [{
+      company: String,
+      title: String,
+      startDate: String,
+      endDate: String,
+      bullets: [String],
+      skillsUsed: [String],
+    }],
+    education: [{
+      degree: String,
+      institution: String,
+      startDate: String,
+      endDate: String,
+      grade: String,
+    }],
+    skills: [String],
+    projects: [{
+      name: String,
+      description: String,
+      skillsUsed: [String],
+    }],
+    certifications: [String],
+    totalYearsExperience: Number,
+    qualityFlags: [{
+      section: String,
+      issue: String,
+      severity: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+      },
+    }],
+    additionalSections: [{
+      sectionName: String,
+      content: [String],
+    }],
+    extractionConfidence: {
+      type: String,
+      enum: ['high', 'medium', 'low'],
+    },
   },
   jdSkills: {
     type: [String],

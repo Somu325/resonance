@@ -7,6 +7,7 @@ import EmptyState from '../components/EmptyState';
 import SkillChip from '../components/SkillChip';
 import Card from '../components/Card';
 import Button from '../components/Button';
+import QualityFlagList from '../components/QualityFlagList';
 
 function Results() {
   const { id } = useParams();
@@ -14,6 +15,7 @@ function Results() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [animate, setAnimate] = useState(false);
+  const [showConfidenceBanner, setShowConfidenceBanner] = useState(true);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -94,7 +96,7 @@ function Results() {
     );
   }
 
-  const { matchPercentage, verdict, reasons, matchedSkills, missingSkills } = analysis;
+  const { matchPercentage, verdict, reasons, matchedSkills, missingSkills, resumeAnalysis } = analysis;
 
   // Determine Badge styling based on verdict contents
   const getBadgeStyle = (verdictStr = '') => {
@@ -167,6 +169,66 @@ function Results() {
             })}
           </span>
         </div>
+
+        {resumeAnalysis?.extractionConfidence === 'low' && showConfidenceBanner && (
+          <div 
+            style={{ 
+              backgroundColor: 'var(--color-mist)', 
+              color: 'var(--color-ink)', 
+              borderLeft: '4px solid var(--color-gold)', 
+              padding: '1rem 1.25rem', 
+              borderRadius: '6px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '1rem',
+              fontSize: '0.9rem',
+              lineHeight: '1.4'
+            }}
+          >
+            <span>
+              This resume's structure was harder to parse automatically — some details below may be incomplete. Consider reviewing the extracted text.
+            </span>
+            <button 
+              onClick={() => setShowConfidenceBanner(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'inherit',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                padding: '0 0.5rem',
+                fontSize: '1.25rem',
+                lineHeight: 1
+              }}
+              aria-label="Dismiss banner"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {resumeAnalysis?.extractionConfidence === 'medium' && (
+          <div 
+            style={{ 
+              backgroundColor: 'var(--color-paper)', 
+              color: 'var(--color-ink)', 
+              borderLeft: '3px solid var(--color-gold-border)', 
+              borderTop: '1px solid var(--color-mist)',
+              borderRight: '1px solid var(--color-mist)',
+              borderBottom: '1px solid var(--color-mist)',
+              padding: '0.75rem 1rem', 
+              borderRadius: '6px',
+              fontSize: '0.85rem',
+              opacity: 0.9,
+              lineHeight: '1.4'
+            }}
+          >
+            <span>
+              Note: This resume's structure was partially ambiguous. Some parsed details might need review.
+            </span>
+          </div>
+        )}
 
         {/* HERO SECTION: Overlapping Venn Dual-Shape */}
         <Card style={{ padding: '2rem' }}>
@@ -366,6 +428,142 @@ function Results() {
           </div>
         </Card>
 
+        {/* EXPERIENCE SUMMARY & RESUME QUALITY */}
+        <div className="grid-cols-2">
+          {/* Experience Summary Card */}
+          <Card>
+            <div style={{ borderBottom: '1px solid var(--color-mist)', paddingBottom: '0.75rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="label-caps">Experience Summary</span>
+              {resumeAnalysis?.totalYearsExperience !== undefined && (
+                <span className="text-data" style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--color-moss)' }}>
+                  [{resumeAnalysis.totalYearsExperience} Years Total]
+                </span>
+              )}
+            </div>
+            
+            {resumeAnalysis?.totalYearsExperience !== undefined && (
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                <span className="text-data" style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--color-ink)', lineHeight: 1 }}>
+                  {resumeAnalysis.totalYearsExperience}
+                </span>
+                <span className="label-caps" style={{ fontSize: '0.75rem', opacity: 0.6 }}>
+                  Total Years of Experience
+                </span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {resumeAnalysis?.experience && resumeAnalysis.experience.length > 0 ? (
+                resumeAnalysis.experience.map((exp, idx) => (
+                  <div 
+                    key={idx} 
+                    style={{ 
+                      paddingBottom: idx === resumeAnalysis.experience.length - 1 ? 0 : '1rem',
+                      borderBottom: idx === resumeAnalysis.experience.length - 1 ? 'none' : '1px solid rgba(228, 225, 214, 0.5)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.25rem'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <span style={{ fontWeight: '600', color: 'var(--color-ink)', fontSize: '0.95rem' }}>
+                        {exp.title || 'Untitled Role'}
+                      </span>
+                      <span className="text-data" style={{ fontSize: '0.8rem', opacity: 0.7, color: 'var(--color-ink)' }}>
+                        {exp.startDate || 'N/A'} – {exp.endDate || 'Present'}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.85rem', opacity: 0.7, color: 'var(--color-ink)' }}>
+                      {exp.company || 'Unknown Company'}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <EmptyState message="Not found on resume" />
+              )}
+            </div>
+          </Card>
+
+          {/* Resume Quality Card */}
+          <Card>
+            <div style={{ borderBottom: '1px solid var(--color-mist)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+              <span className="label-caps">Resume Quality Flags</span>
+            </div>
+            <QualityFlagList flags={resumeAnalysis?.qualityFlags} />
+          </Card>
+        </div>
+
+        {/* EDUCATION & ADDITIONAL SECTIONS */}
+        <div className={resumeAnalysis?.additionalSections && resumeAnalysis.additionalSections.length > 0 ? "grid-cols-2" : ""}>
+          {/* Education History Card */}
+          <Card>
+            <div style={{ borderBottom: '1px solid var(--color-mist)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+              <span className="label-caps">Education History</span>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {resumeAnalysis?.education && resumeAnalysis.education.length > 0 ? (
+                resumeAnalysis.education.map((edu, idx) => (
+                  <div 
+                    key={idx} 
+                    style={{ 
+                      paddingBottom: idx === resumeAnalysis.education.length - 1 ? 0 : '1rem',
+                      borderBottom: idx === resumeAnalysis.education.length - 1 ? 'none' : '1px solid rgba(228, 225, 214, 0.5)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.25rem'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <span style={{ fontWeight: '600', color: 'var(--color-ink)', fontSize: '0.95rem' }}>
+                        {edu.degree || 'Degree/Certificate'}
+                      </span>
+                      <span className="text-data" style={{ fontSize: '0.8rem', opacity: 0.7, color: 'var(--color-ink)' }}>
+                        {edu.startDate || edu.year || 'N/A'} {edu.endDate ? `– ${edu.endDate}` : ''}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', opacity: 0.7, color: 'var(--color-ink)' }}>
+                        {edu.institution || 'Unknown Institution'}
+                      </span>
+                      {edu.grade && (
+                        <span className="text-data" style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--color-moss)' }}>
+                          Grade: {edu.grade}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <EmptyState message="Not found on resume" />
+              )}
+            </div>
+          </Card>
+
+          {/* Additional Sections Card */}
+          {resumeAnalysis?.additionalSections && resumeAnalysis.additionalSections.length > 0 && (
+            <Card>
+              <div style={{ borderBottom: '1px solid var(--color-mist)', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+                <span className="label-caps">Additional Sections</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {resumeAnalysis.additionalSections.map((sec, idx) => (
+                  <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <span className="label-caps" style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--color-moss)' }}>
+                      {sec.sectionName}
+                    </span>
+                    <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.9rem', opacity: 0.85, fontFamily: 'var(--font-body)' }}>
+                      {sec.content && sec.content.map((item, itemIdx) => (
+                        <li key={itemIdx} style={{ marginBottom: '0.25rem' }}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </div>
+
         {/* SKILLS DETAILED BREAKDOWN */}
         <div className="grid-cols-2">
           {/* Matched Skills Card */}
@@ -382,9 +580,7 @@ function Results() {
                   <SkillChip key={index} label={skill} variant="matched" />
                 ))
               ) : (
-                <p style={{ fontStyle: 'italic', opacity: 0.5, fontSize: '0.9rem', color: 'var(--color-ink)' }}>
-                  No direct overlapping skills detected.
-                </p>
+                <EmptyState message="No matching skills found on resume" />
               )}
             </div>
           </Card>
@@ -403,9 +599,7 @@ function Results() {
                   <SkillChip key={index} label={skill} variant="missing" />
                 ))
               ) : (
-                <p style={{ fontStyle: 'italic', opacity: 0.7, fontSize: '0.9rem', color: 'var(--color-moss)', fontWeight: '500' }}>
-                  No missing skills — full match!
-                </p>
+                <EmptyState message="No missing skills — full match!" />
               )}
             </div>
           </Card>

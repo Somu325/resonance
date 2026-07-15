@@ -1,5 +1,5 @@
 const Analysis = require('../models/Analysis');
-const { extractSkills, computeMatch, generateVerdict } = require('../services/aiService');
+const { analyzeResume, extractJDSkills, matchSkills, generateVerdict } = require('../services/aiService');
 const asyncHandler = require('../utils/asyncHandler');
 const { parseFile: parseFileService } = require('../services/fileParserService');
 
@@ -10,14 +10,24 @@ const analyze = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Resume text and JD text are required' });
   }
 
-  const { resumeSkills, jdSkills, provider: extractProvider } = await extractSkills(resumeText, jdText);
+  const { resumeAnalysis, provider: resumeProvider } = await analyzeResume(resumeText);
 
-  const { matchedSkills, missingSkills, matchPercentage } = computeMatch(resumeSkills, jdSkills);
+  // Note: extractionConfidence (e.g. 'low') is read from resumeAnalysis and saved to the database.
+  // This signal flows directly to the frontend to display an appropriate disclaimer on the Results page.
+  if (resumeAnalysis.extractionConfidence === 'low') {
+    console.warn('Low resume extraction confidence reported by AI.');
+  }
+
+  const { jdSkills, provider: jdProvider } = await extractJDSkills(jdText);
+
+  const { matchedSkills, missingSkills, matchPercentage } = await matchSkills(resumeAnalysis.skills, jdSkills);
 
   const { verdict, reasons, provider: verdictProvider } = await generateVerdict(
     matchedSkills,
     missingSkills,
-    matchPercentage
+    matchPercentage,
+    resumeAnalysis.totalYearsExperience,
+    resumeAnalysis.qualityFlags
   );
 
   const analysis = await Analysis.create({
@@ -25,14 +35,14 @@ const analyze = asyncHandler(async (req, res) => {
     resumeText,
     resumeSource: resumeSource || 'paste',
     jdText,
-    resumeSkills,
+    resumeAnalysis,
     jdSkills,
     matchedSkills,
     missingSkills,
     matchPercentage,
     verdict,
     reasons,
-    aiProvider: verdictProvider || extractProvider,
+    aiProvider: verdictProvider || resumeProvider || jdProvider,
   });
 
   res.status(201).json(analysis);
