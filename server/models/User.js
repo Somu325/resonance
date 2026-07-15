@@ -10,7 +10,19 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: false,
+  },
+  githubId: {
+    type: String,
+    required: false,
+    unique: true,
+    sparse: true,
+  },
+  googleId: {
+    type: String,
+    required: false,
+    unique: true,
+    sparse: true,
   },
 }, { timestamps: true });
 

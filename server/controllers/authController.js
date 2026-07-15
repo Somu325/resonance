@@ -66,4 +66,22 @@ const me = asyncHandler(async (req, res) => {
   res.status(200).json(user);
 });
 
-module.exports = { signup, login, logout, me };
+const githubCallback = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    return res.redirect(`${process.env.CLIENT_URL}/login?error=oauth_failed`);
+  }
+  const token = generateToken(req.user._id);
+  res.cookie('token', token, cookieOptions);
+  res.redirect(process.env.CLIENT_URL);
+});
+
+const googleCallback = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    return res.redirect(`${process.env.CLIENT_URL}/login?error=oauth_failed`);
+  }
+  const token = generateToken(req.user._id);
+  res.cookie('token', token, cookieOptions);
+  res.redirect(process.env.CLIENT_URL);
+});
+
+module.exports = { signup, login, logout, me, githubCallback, googleCallback };
