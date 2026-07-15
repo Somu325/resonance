@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import api from '../services/api';
 import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
@@ -16,8 +17,40 @@ function Results() {
   const [error, setError] = useState('');
   const [animate, setAnimate] = useState(false);
   const [showConfidenceBanner, setShowConfidenceBanner] = useState(true);
-  const { logout } = useAuth();
+  const { logout, user, checkAuth } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
+
+  const [suggestions, setSuggestions] = useState(null);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState('');
+
+  const handleGetSuggestions = async () => {
+    setLoadingSuggestions(true);
+    setSuggestionsError('');
+    try {
+      const res = await api.get(`/analysis/${id}/suggestions`);
+      setSuggestions(res.data);
+      if (checkAuth) {
+        await checkAuth();
+      }
+    } catch (err) {
+      console.error('Error fetching suggestions:', err);
+      const errMsg = err.response?.data?.message || 'Failed to fetch suggestions';
+      setSuggestionsError(errMsg);
+      showToast(errMsg, 'error');
+      if (checkAuth) {
+        await checkAuth();
+      }
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const suggestionsUsed = user?.suggestionsUsed ?? 0;
+  const isSuggestionsLimitReached = suggestionsUsed >= 5;
+  const missingSkillSuggestions = (suggestions || []).filter(s => s.type === 'missing_skill');
+  const qualityFlagSuggestions = (suggestions || []).filter(s => s.type === 'quality_flag');
 
   useEffect(() => {
     const fetchAnalysis = async () => {
@@ -604,6 +637,102 @@ function Results() {
             </div>
           </Card>
         </div>
+
+        {/* IMPROVEMENT SUGGESTIONS SECTION */}
+        <Card style={{ padding: '2rem' }}>
+          <div style={{ borderBottom: '1px solid var(--color-mist)', paddingBottom: '0.75rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div>
+              <span className="label-caps">[ MATCH OPTIMIZATION ]</span>
+              <h3 style={{ fontSize: '1.5rem', marginTop: '0.25rem' }}>Actionable Recommendations</h3>
+            </div>
+            {/* Show usage text */}
+            {user && (
+              <span className="text-data" style={{ fontSize: '0.85rem', color: isSuggestionsLimitReached ? 'var(--color-clay)' : 'var(--color-moss)', fontWeight: '600' }}>
+                {isSuggestionsLimitReached 
+                  ? "0 of 5 suggestion uses remaining" 
+                  : `${5 - suggestionsUsed} of 5 free suggestion uses remaining`
+                }
+              </span>
+            )}
+          </div>
+
+          {!suggestions ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem 0' }}>
+              <p style={{ opacity: 0.7, fontSize: '0.95rem', textAlign: 'center', maxWidth: '500px', margin: 0 }}>
+                Get custom, AI-generated suggestions on how to demonstrate missing skills or fix resume quality issues to improve this alignment score.
+              </p>
+              <Button
+                variant="secondary"
+                onClick={handleGetSuggestions}
+                loading={loadingSuggestions}
+                disabled={isSuggestionsLimitReached}
+                style={{ minWidth: '280px' }}
+              >
+                Get suggestions to improve your match
+              </Button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {missingSkillSuggestions.length > 0 && (
+                <div>
+                  <h4 className="label-caps" style={{ color: 'var(--color-clay)', marginBottom: '0.75rem', opacity: 0.9 }}>
+                    Missing Skill Guidance
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {missingSkillSuggestions.map((item, idx) => (
+                      <div 
+                        key={idx} 
+                        style={{ 
+                          padding: '1rem', 
+                          border: '1px solid var(--color-mist)', 
+                          borderRadius: '8px', 
+                          backgroundColor: 'rgba(228, 225, 214, 0.2)' 
+                        }}
+                      >
+                        <div style={{ fontWeight: '600', marginBottom: '0.25rem', color: 'var(--color-ink)', fontSize: '0.9rem' }}>
+                          Skill: <span style={{ color: 'var(--color-clay)', fontFamily: 'var(--font-mono)' }}>{item.target}</span>
+                        </div>
+                        <p style={{ fontSize: '0.9rem', opacity: 0.85, margin: 0 }}>{item.suggestion}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {qualityFlagSuggestions.length > 0 && (
+                <div>
+                  <h4 className="label-caps" style={{ color: 'var(--color-gold)', marginBottom: '0.75rem', opacity: 0.9 }}>
+                    Quality Flag Corrections
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {qualityFlagSuggestions.map((item, idx) => (
+                      <div 
+                        key={idx} 
+                        style={{ 
+                          padding: '1rem', 
+                          border: '1px solid var(--color-mist)', 
+                          borderRadius: '8px', 
+                          backgroundColor: 'rgba(228, 225, 214, 0.2)' 
+                        }}
+                      >
+                        <div style={{ fontWeight: '600', marginBottom: '0.25rem', color: 'var(--color-ink)', fontSize: '0.9rem' }}>
+                          Issue: <span style={{ color: 'var(--color-gold)', fontFamily: 'var(--font-mono)' }}>{item.target}</span>
+                        </div>
+                        <p style={{ fontSize: '0.9rem', opacity: 0.85, margin: 0 }}>{item.suggestion}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {missingSkillSuggestions.length === 0 && qualityFlagSuggestions.length === 0 && (
+                <p style={{ opacity: 0.7, fontSize: '0.95rem', margin: 0 }}>
+                  No missing skills or quality flags detected, so no recommendations are needed! Great job!
+                </p>
+              )}
+            </div>
+          )}
+        </Card>
 
         {/* Footer Actions */}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'center', marginBottom: '3rem' }}>

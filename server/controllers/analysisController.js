@@ -1,5 +1,6 @@
 const Analysis = require('../models/Analysis');
-const { analyzeResume, extractJDSkills, matchSkills, generateVerdict } = require('../services/aiService');
+const User = require('../models/User');
+const { analyzeResume, extractJDSkills, matchSkills, generateVerdict, generateSuggestions } = require('../services/aiService');
 const asyncHandler = require('../utils/asyncHandler');
 const { parseFile: parseFileService } = require('../services/fileParserService');
 
@@ -45,6 +46,9 @@ const analyze = asyncHandler(async (req, res) => {
     aiProvider: verdictProvider || resumeProvider || jdProvider,
   });
 
+  // Increment user's lifetime analyses count on success
+  await User.findByIdAndUpdate(req.userId, { $inc: { analysesUsed: 1 } });
+
   res.status(201).json(analysis);
 });
 
@@ -75,4 +79,26 @@ const parseFile = asyncHandler(async (req, res) => {
   res.status(200).json({ text });
 });
 
-module.exports = { analyze, getHistory, getById, parseFile };
+const getSuggestions = asyncHandler(async (req, res) => {
+  const analysis = await Analysis.findOne({ _id: req.params.id, userId: req.userId });
+
+  if (!analysis) {
+    return res.status(404).json({ message: 'Analysis not found' });
+  }
+
+  // Generate suggestions dynamically from the AI service.
+  // Note: We do not persist these suggestions to the Analysis document to keep the schema simple.
+  // This is a deliberate trade-off: each call to this endpoint will request suggestions fresh from the AI
+  // and will consume another suggestion count from the user's limit.
+  const { suggestions } = await generateSuggestions(
+    analysis.missingSkills,
+    analysis.resumeAnalysis ? analysis.resumeAnalysis.qualityFlags : []
+  );
+
+  // Increment user's lifetime suggestions count on success
+  await User.findByIdAndUpdate(req.userId, { $inc: { suggestionsUsed: 1 } });
+
+  res.status(200).json(suggestions);
+});
+
+module.exports = { analyze, getHistory, getById, parseFile, getSuggestions };

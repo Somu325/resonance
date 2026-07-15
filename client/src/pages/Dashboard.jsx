@@ -13,9 +13,12 @@ function Dashboard() {
   const [jdText, setJdText] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
 
-  const { logout, user } = useAuth();
+  const { logout, user, checkAuth } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+
+  const analysesUsed = user?.analysesUsed ?? 0;
+  const isLimitReached = analysesUsed >= 5;
 
   const handleLogout = async () => {
     try {
@@ -48,6 +51,9 @@ function Dashboard() {
         jdText,
         resumeSource,
       });
+
+      // Live update of analyses count
+      await checkAuth();
 
       if (response.data && response.data._id) {
         navigate(`/results/${response.data._id}`);
@@ -148,10 +154,26 @@ function Dashboard() {
 
           {/* Action Trigger */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem', gap: '1rem' }}>
+            {user && (
+              <div 
+                style={{ 
+                  fontFamily: 'var(--font-mono)', 
+                  fontSize: '0.85rem', 
+                  color: isLimitReached ? 'var(--color-clay)' : 'var(--color-ink)',
+                  opacity: isLimitReached ? 1 : 0.6,
+                  fontWeight: isLimitReached ? '600' : 'normal'
+                }}
+              >
+                {isLimitReached 
+                  ? "You've used all 5 free analyses." 
+                  : `${analysesUsed} of 5 free analyses used`
+                }
+              </div>
+            )}
             <Button
               type="submit"
               loading={analyzing}
-              disabled={!resumeText.trim() || !jdText.trim()}
+              disabled={!resumeText.trim() || !jdText.trim() || isLimitReached}
               style={{ padding: '1rem 3rem', fontSize: '1.05rem', minWidth: '280px' }}
             >
               Analyze Alignment

@@ -94,7 +94,12 @@ const me = asyncHandler(async (req, res) => {
   delete userObj.verificationToken;
   delete userObj.verificationTokenExpires;
 
-  res.status(200).json({ ...userObj, hasPassword });
+  res.status(200).json({ 
+    ...userObj, 
+    analysesUsed: user.analysesUsed ?? 0,
+    suggestionsUsed: user.suggestionsUsed ?? 0,
+    hasPassword 
+  });
 });
 
 const githubCallback = asyncHandler(async (req, res) => {

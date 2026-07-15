@@ -379,4 +379,91 @@ Return ONLY valid JSON in this exact shape, containing exactly 3 short, concise 
   }
 };
 
-module.exports = { analyzeResume, extractJDSkills, matchSkills, generateVerdict };
+const generateSuggestions = async (missingSkills, qualityFlags) => {
+  const relevantFlags = (qualityFlags || []).filter(f => {
+    const sev = (f.severity || '').toLowerCase();
+    return sev === 'high' || sev === 'medium';
+  });
+
+  const prompt = `
+You are a professional career coach and resume expert.
+Given a list of missing skills (gaps between a candidate's resume and a Job Description) and a list of resume quality flags (issues detected in the resume), generate concrete, actionable suggestions for improving the resume.
+
+Input details:
+1. Missing Skills:
+${(missingSkills || []).map(skill => `- ${skill}`).join('\n') || 'None'}
+
+2. Resume Quality Flags (High/Medium Severity):
+${relevantFlags.map(f => `- [${f.severity.toUpperCase()}] Section: ${f.section}, Issue: ${f.issue}`).join('\n') || 'None'}
+
+Instructions:
+- Provide exactly one concrete, actionable suggestion for each missing skill listed under "Missing Skills". Explain how the candidate can demonstrate this skill on their resume or gain it.
+- Provide exactly one concrete, actionable suggestion for each quality flag listed under "Resume Quality Flags". Explain how to fix that specific issue.
+- The output must be dynamically sized to however many gaps actually exist.
+- Return ONLY a valid JSON object matching this exact schema:
+{
+  "suggestions": [
+    {
+      "type": "missing_skill" | "quality_flag",
+      "target": "string (the name of the missing skill or the issue description of the quality flag)",
+      "suggestion": "string (the concrete, actionable advice)"
+    }
+  ]
+}
+
+Return ONLY valid JSON. Do not wrap in markdown or add commentary.
+`;
+
+  let responseText;
+  let provider;
+
+  try {
+    const response = await callWithTimeout(
+      openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+      }),
+      20000
+    );
+    responseText = response.choices[0].message.content;
+    provider = "openai";
+  } catch (err) {
+    logger.warn('OpenAI generateSuggestions failed, falling back to Gemini', {
+      event: 'ai_fallback_triggered',
+      function: 'generateSuggestions',
+      primaryProvider: 'openai',
+      reason: err.message
+    });
+    try {
+      const model = gemini.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const result = await callWithTimeout(model.generateContent(prompt), 20000);
+      responseText = result.response
+        .text()
+        .replace(/```json|```/g, "")
+        .trim();
+      provider = "gemini";
+    } catch (geminiErr) {
+      logger.error('Both AI providers failed for generateSuggestions', {
+        event: 'ai_both_providers_failed',
+        function: 'generateSuggestions',
+        openaiError: err.message,
+        geminiError: geminiErr.message
+      });
+      const apiError = new Error("AI_UNAVAILABLE");
+      apiError.statusCode = 502;
+      throw apiError;
+    }
+  }
+
+  try {
+    const parsed = JSON.parse(responseText);
+    return { suggestions: parsed.suggestions || [], provider };
+  } catch (parseErr) {
+    const error = new Error("Analysis failed, please try again");
+    error.statusCode = 502;
+    throw error;
+  }
+};
+
+module.exports = { analyzeResume, extractJDSkills, matchSkills, generateVerdict, generateSuggestions };
