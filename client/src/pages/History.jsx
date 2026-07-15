@@ -82,6 +82,9 @@ function History() {
           <Link to="/history" className="nav-link active">
             History
           </Link>
+          <Link to="/settings" className="nav-link">
+            Settings
+          </Link>
           <button
             onClick={handleLogout}
             className="nav-link"

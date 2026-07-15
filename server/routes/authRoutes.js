@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
-const { signup, login, logout, me, githubCallback, googleCallback } = require('../controllers/authController');
+const { signup, login, logout, me, githubCallback, googleCallback, verifyEmail, resendVerification, changeEmail, deleteAccount } = require('../controllers/authController');
 const requireAuth = require('../middleware/requireAuth');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { signupValidator, loginValidator, handleValidationErrors } = require('../middleware/validators');
@@ -10,6 +10,10 @@ router.post('/signup', authLimiter, signupValidator, handleValidationErrors, sig
 router.post('/login', authLimiter, loginValidator, handleValidationErrors, login);
 router.post('/logout', logout);
 router.get('/me', requireAuth, me);
+router.get('/verify-email', verifyEmail);
+router.post('/resend-verification', requireAuth, resendVerification);
+router.post('/change-email', requireAuth, changeEmail);
+router.delete('/account', requireAuth, deleteAccount);
 
 // GitHub OAuth routes
 router.get('/github', passport.authenticate('github', { session: false, scope: ['user:email'] }));

@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard';
 import Results from './pages/Results';
 import History from './pages/History';
 import NotFound from './pages/NotFound';
+import VerifyEmail from './pages/VerifyEmail';
+import Settings from './pages/Settings';
 import Spinner from './components/Spinner';
 
 function AppContent() {
@@ -36,6 +38,7 @@ function AppContent() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route
         path="/"
         element={
@@ -57,6 +60,14 @@ function AppContent() {
         element={
           <PrivateRoute>
             <History />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <PrivateRoute>
+            <Settings />
           </PrivateRoute>
         }
       />

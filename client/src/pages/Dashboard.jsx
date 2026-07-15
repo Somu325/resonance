@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import api from '../services/api';
 import Button from '../components/Button';
 import FileOrTextInput from '../components/FileOrTextInput';
+import VerificationBanner from '../components/VerificationBanner';
 
 function Dashboard() {
   const [resumeText, setResumeText] = useState('');
@@ -12,7 +13,7 @@ function Dashboard() {
   const [jdText, setJdText] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
 
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -28,6 +29,11 @@ function Dashboard() {
 
   const handleAnalyze = async (e) => {
     e.preventDefault();
+
+    if (user && !user.isVerified) {
+      showToast('Please verify your email first', 'error');
+      return;
+    }
 
     if (!resumeText.trim() || !jdText.trim()) {
       showToast('Please provide both a resume and a job description.', 'error');
@@ -71,6 +77,9 @@ function Dashboard() {
           <Link to="/history" className="nav-link">
             History
           </Link>
+          <Link to="/settings" className="nav-link">
+            Settings
+          </Link>
           <button
             onClick={handleLogout}
             className="nav-link"
@@ -89,6 +98,7 @@ function Dashboard() {
 
       {/* Main Working Area */}
       <main className="layout-container fade-in-slide" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        {user && !user.isVerified && <VerificationBanner />}
         <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
           <span className="label-caps" style={{ display: 'inline-block', marginBottom: '0.5rem' }}>Signal Matching</span>
           <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>

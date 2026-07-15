@@ -38,6 +38,7 @@ async function findOrCreateOAuthUser({ provider, providerId, email }) {
   const newUser = new User({
     email,
     [idField]: providerId,
+    isVerified: true,
   });
 
   await newUser.save();

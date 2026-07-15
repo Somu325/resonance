@@ -24,6 +24,18 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
   },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  verificationToken: {
+    type: String,
+    required: false,
+  },
+  verificationTokenExpires: {
+    type: Date,
+    required: false,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

@@ -128,12 +128,12 @@ function Results() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-paper)' }}>
-      {/* Navigation */}
       <header className="nav-header">
         <Link to="/" className="nav-logo">Resonance</Link>
         <nav className="nav-links">
           <Link to="/" className="nav-link">Compare</Link>
           <Link to="/history" className="nav-link">History</Link>
+          <Link to="/settings" className="nav-link">Settings</Link>
           <button 
             onClick={handleLogout} 
             className="nav-link" 

@@ -1,5 +1,8 @@
+const crypto = require('crypto');
 const User = require('../models/User');
+const Analysis = require('../models/Analysis');
 const { hashPassword, comparePassword, generateToken } = require('../services/authService');
+const { sendVerificationEmail } = require('../services/emailService');
 const asyncHandler = require('../utils/asyncHandler');
 
 const cookieOptions = {
@@ -24,10 +27,24 @@ const signup = asyncHandler(async (req, res) => {
   const hashedPassword = await hashPassword(password);
   const newUser = await User.create({ email, password: hashedPassword });
 
+  // Generate a token: crypto.randomBytes(32).toString('hex')
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+  newUser.verificationToken = verificationToken;
+  newUser.verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  await newUser.save();
+
+  let emailSendFailed = false;
+  try {
+    await sendVerificationEmail(newUser.email, verificationToken);
+  } catch (err) {
+    console.error('Failed to send verification email on signup:', err);
+    emailSendFailed = true;
+  }
+
   const token = generateToken(newUser._id);
   res.cookie('token', token, cookieOptions);
 
-  res.status(201).json({ id: newUser._id, email: newUser.email });
+  res.status(201).json({ id: newUser._id, email: newUser.email, emailSendFailed });
 });
 
 const login = asyncHandler(async (req, res) => {
@@ -59,11 +76,17 @@ const logout = asyncHandler(async (req, res) => {
 });
 
 const me = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.userId).select('-password');
+  const user = await User.findById(req.userId);
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
-  res.status(200).json(user);
+  const userObj = user.toObject();
+  const hasPassword = !!user.password;
+  delete userObj.password;
+  delete userObj.verificationToken;
+  delete userObj.verificationTokenExpires;
+
+  res.status(200).json({ ...userObj, hasPassword });
 });
 
 const githubCallback = asyncHandler(async (req, res) => {
@@ -84,4 +107,150 @@ const googleCallback = asyncHandler(async (req, res) => {
   res.redirect(process.env.CLIENT_URL);
 });
 
-module.exports = { signup, login, logout, me, githubCallback, googleCallback };
+const verifyEmail = asyncHandler(async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).json({ message: 'Verification token is required' });
+  }
+
+  const user = await User.findOne({
+    verificationToken: token,
+    verificationTokenExpires: { $gt: new Date() },
+  });
+
+  if (!user) {
+    return res.status(400).json({ message: 'Invalid or expired verification link' });
+  }
+
+  user.isVerified = true;
+  user.verificationToken = undefined;
+  user.verificationTokenExpires = undefined;
+  await user.save();
+
+  res.status(200).json({ message: 'Email verified' });
+});
+
+const resendVerification = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.userId);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  if (user.isVerified) {
+    return res.status(400).json({ message: 'Email already verified' });
+  }
+
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+  user.verificationToken = verificationToken;
+  user.verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  await user.save();
+
+  try {
+    await sendVerificationEmail(user.email, verificationToken);
+  } catch (err) {
+    console.error('Failed to send verification email on resend:', err);
+    return res.status(500).json({ message: 'Failed to send verification email' });
+  }
+
+  res.status(200).json({ message: 'Verification email sent' });
+});
+
+const changeEmail = asyncHandler(async (req, res) => {
+  const { newEmail, currentPassword } = req.body;
+
+  if (!newEmail) {
+    return res.status(400).json({ message: 'New email is required' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(newEmail)) {
+    return res.status(400).json({ message: 'Invalid email format' });
+  }
+
+  const user = await User.findById(req.userId);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  if (user.password) {
+    if (!currentPassword) {
+      return res.status(400).json({ message: 'Current password is required to verify identity' });
+    }
+    const isMatch = await comparePassword(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid password' });
+    }
+  }
+
+  const existingUser = await User.findOne({ email: newEmail, _id: { $ne: req.userId } });
+  if (existingUser) {
+    return res.status(409).json({ message: 'Email already in use' });
+  }
+
+  user.email = newEmail;
+  user.isVerified = false;
+
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+  user.verificationToken = verificationToken;
+  user.verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  await user.save();
+
+  let emailSendFailed = false;
+  try {
+    await sendVerificationEmail(newEmail, verificationToken);
+  } catch (err) {
+    console.error('Failed to send verification email on email change:', err);
+    emailSendFailed = true;
+  }
+
+  const userObj = user.toObject();
+  delete userObj.password;
+  delete userObj.verificationToken;
+  delete userObj.verificationTokenExpires;
+
+  res.status(200).json({ ...userObj, emailSendFailed });
+});
+
+const deleteAccount = asyncHandler(async (req, res) => {
+  const { currentPassword } = req.body;
+
+  const user = await User.findById(req.userId);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  if (user.password) {
+    if (!currentPassword) {
+      return res.status(400).json({ message: 'Current password is required to verify identity' });
+    }
+    const isMatch = await comparePassword(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid password' });
+    }
+  }
+
+  // Delete all Analysis documents associated with this user
+  await Analysis.deleteMany({ userId: req.userId });
+
+  // Delete the User document
+  await User.findByIdAndDelete(req.userId);
+
+  // Clear cookie
+  res.clearCookie('token', cookieOptions);
+
+  res.status(200).json({ message: 'Account deleted' });
+});
+
+module.exports = { 
+  signup, 
+  login, 
+  logout, 
+  me, 
+  githubCallback, 
+  googleCallback,
+  verifyEmail,
+  resendVerification,
+  changeEmail,
+  deleteAccount
+};
