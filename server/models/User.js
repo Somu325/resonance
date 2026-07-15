@@ -36,6 +36,15 @@ const userSchema = new mongoose.Schema({
     type: Date,
     required: false,
   },
+  // Lifetime usage totals (caps of 5 each are enforced in middleware, not stored on the schema)
+  analysesUsed: {
+    type: Number,
+    default: 0,
+  },
+  suggestionsUsed: {
+    type: Number,
+    default: 0,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

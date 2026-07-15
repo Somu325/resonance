@@ -1,5 +1,12 @@
+const logger = require('../config/logger');
+
 const errorHandler = (err, req, res, next) => {
-  console.error(err);
+  logger.error('Request error occurred', {
+    error: err.message,
+    stack: err.stack,
+    method: req.method,
+    path: req.originalUrl
+  });
 
   const statusCode = err.statusCode || err.status || 500;
   const message = process.env.NODE_ENV === 'production'

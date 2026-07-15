@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const logger = require('../config/logger');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -37,10 +38,10 @@ const sendVerificationEmail = async (toEmail, verificationToken) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Verification email sent successfully:', info.messageId);
+    logger.info('Verification email sent successfully', { event: 'verification_email_sent', toEmail });
     return info;
   } catch (error) {
-    console.error('Error sending verification email:', error);
+    logger.error('Error sending verification email:', { error: error.message, stack: error.stack });
     throw error;
   }
 };

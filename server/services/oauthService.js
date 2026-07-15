@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const logger = require('../config/logger');
 
 /**
  * Resolves an OAuth user by finding an existing account or creating a new one.
@@ -17,6 +18,17 @@ async function findOrCreateOAuthUser({ provider, providerId, email }) {
   // This handles recurring OAuth log-ins for the same provider.
   const existingUserById = await User.findOne({ [idField]: providerId });
   if (existingUserById) {
+    if (!existingUserById.isVerified) {
+      existingUserById.isVerified = true;
+      await existingUserById.save();
+    }
+    logger.info('OAuth login successful (existing provider ID)', {
+      event: 'oauth_login',
+      provider,
+      userId: existingUserById._id,
+      email: existingUserById.email,
+      branch: 'existing_oauth_user'
+    });
     return existingUserById;
   }
 
@@ -27,7 +39,15 @@ async function findOrCreateOAuthUser({ provider, providerId, email }) {
     const existingUserByEmail = await User.findOne({ email });
     if (existingUserByEmail) {
       existingUserByEmail[idField] = providerId;
+      existingUserByEmail.isVerified = true;
       await existingUserByEmail.save();
+      logger.info('OAuth login successful (linked to existing email)', {
+        event: 'oauth_login',
+        provider,
+        userId: existingUserByEmail._id,
+        email: existingUserByEmail.email,
+        branch: 'linked_to_existing_email'
+      });
       return existingUserByEmail;
     }
   }
@@ -42,6 +62,13 @@ async function findOrCreateOAuthUser({ provider, providerId, email }) {
   });
 
   await newUser.save();
+  logger.info('OAuth login successful (new user created)', {
+    event: 'oauth_login',
+    provider,
+    userId: newUser._id,
+    email: newUser.email,
+    branch: 'new_user_created'
+  });
   return newUser;
 }
 

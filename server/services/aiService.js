@@ -1,5 +1,6 @@
 const OpenAI = require("openai");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const logger = require("../config/logger");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -107,7 +108,12 @@ ${resumeText}
     responseText = response.choices[0].message.content;
     provider = "openai";
   } catch (err) {
-    console.error("OpenAI resume analysis failed, falling back to Gemini:", err.message);
+    logger.warn('OpenAI resume analysis failed, falling back to Gemini', {
+      event: 'ai_fallback_triggered',
+      function: 'analyzeResume',
+      primaryProvider: 'openai',
+      reason: err.message
+    });
     try {
       const model = gemini.getGenerativeModel({ model: "gemini-2.5-flash" });
       const result = await callWithTimeout(model.generateContent(prompt), 20000);
@@ -117,7 +123,12 @@ ${resumeText}
         .trim();
       provider = "gemini";
     } catch (geminiErr) {
-      console.error("Gemini resume analysis failed too:", geminiErr.message);
+      logger.error('Both AI providers failed for analyzeResume', {
+        event: 'ai_both_providers_failed',
+        function: 'analyzeResume',
+        openaiError: err.message,
+        geminiError: geminiErr.message
+      });
       const apiError = new Error("AI_UNAVAILABLE");
       apiError.statusCode = 502;
       throw apiError;
@@ -159,7 +170,12 @@ ${jdText}
     responseText = response.choices[0].message.content;
     provider = "openai";
   } catch (err) {
-    console.error("OpenAI JD extraction failed, falling back to Gemini:", err.message);
+    logger.warn('OpenAI JD extraction failed, falling back to Gemini', {
+      event: 'ai_fallback_triggered',
+      function: 'extractJDSkills',
+      primaryProvider: 'openai',
+      reason: err.message
+    });
     try {
       const model = gemini.getGenerativeModel({ model: "gemini-2.5-flash" });
       const result = await callWithTimeout(model.generateContent(prompt), 20000);
@@ -169,7 +185,12 @@ ${jdText}
         .trim();
       provider = "gemini";
     } catch (geminiErr) {
-      console.error("Gemini JD extraction failed too:", geminiErr.message);
+      logger.error('Both AI providers failed for extractJDSkills', {
+        event: 'ai_both_providers_failed',
+        function: 'extractJDSkills',
+        openaiError: err.message,
+        geminiError: geminiErr.message
+      });
       const apiError = new Error("AI_UNAVAILABLE");
       apiError.statusCode = 502;
       throw apiError;
@@ -227,7 +248,12 @@ Return ONLY valid JSON. Do not wrap in markdown or add commentary.
     responseText = response.choices[0].message.content;
     provider = "openai";
   } catch (err) {
-    console.error("OpenAI skill matching failed, falling back to Gemini:", err.message);
+    logger.warn('OpenAI skill matching failed, falling back to Gemini', {
+      event: 'ai_fallback_triggered',
+      function: 'matchSkills',
+      primaryProvider: 'openai',
+      reason: err.message
+    });
     try {
       const model = gemini.getGenerativeModel({ model: "gemini-2.5-flash" });
       const result = await callWithTimeout(model.generateContent(prompt), 20000);
@@ -237,7 +263,12 @@ Return ONLY valid JSON. Do not wrap in markdown or add commentary.
         .trim();
       provider = "gemini";
     } catch (geminiErr) {
-      console.error("Gemini skill matching failed too:", geminiErr.message);
+      logger.error('Both AI providers failed for matchSkills', {
+        event: 'ai_both_providers_failed',
+        function: 'matchSkills',
+        openaiError: err.message,
+        geminiError: geminiErr.message
+      });
       const apiError = new Error("AI_UNAVAILABLE");
       apiError.statusCode = 502;
       throw apiError;
@@ -311,7 +342,12 @@ Return ONLY valid JSON in this exact shape, containing exactly 3 short, concise 
     responseText = response.choices[0].message.content;
     provider = "openai";
   } catch (err) {
-    console.error("OpenAI verdict failed, falling back to Gemini:", err.message);
+    logger.warn('OpenAI verdict failed, falling back to Gemini', {
+      event: 'ai_fallback_triggered',
+      function: 'generateVerdict',
+      primaryProvider: 'openai',
+      reason: err.message
+    });
     try {
       const model = gemini.getGenerativeModel({ model: "gemini-2.5-flash" });
       const result = await callWithTimeout(model.generateContent(prompt), 20000);
@@ -321,7 +357,12 @@ Return ONLY valid JSON in this exact shape, containing exactly 3 short, concise 
         .trim();
       provider = "gemini";
     } catch (geminiErr) {
-      console.error("Gemini verdict failed too:", geminiErr.message);
+      logger.error('Both AI providers failed for generateVerdict', {
+        event: 'ai_both_providers_failed',
+        function: 'generateVerdict',
+        openaiError: err.message,
+        geminiError: geminiErr.message
+      });
       const apiError = new Error("AI_UNAVAILABLE");
       apiError.statusCode = 502;
       throw apiError;

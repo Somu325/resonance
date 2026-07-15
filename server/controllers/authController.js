@@ -4,6 +4,7 @@ const Analysis = require('../models/Analysis');
 const { hashPassword, comparePassword, generateToken } = require('../services/authService');
 const { sendVerificationEmail } = require('../services/emailService');
 const asyncHandler = require('../utils/asyncHandler');
+const logger = require('../config/logger');
 
 const cookieOptions = {
   httpOnly: true,
@@ -37,9 +38,11 @@ const signup = asyncHandler(async (req, res) => {
   try {
     await sendVerificationEmail(newUser.email, verificationToken);
   } catch (err) {
-    console.error('Failed to send verification email on signup:', err);
+    logger.error('Failed to send verification email on signup:', { error: err.message, stack: err.stack });
     emailSendFailed = true;
   }
+
+  logger.info('User signup successful', { event: 'signup', userId: newUser._id, email: newUser.email, method: 'password' });
 
   const token = generateToken(newUser._id);
   res.cookie('token', token, cookieOptions);
@@ -56,13 +59,17 @@ const login = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ email });
   if (!user) {
+    logger.info('User login failed', { event: 'login_failed', email, reason: 'invalid_credentials' });
     return res.status(401).json({ message: 'Invalid credentials' });
   }
 
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) {
+    logger.info('User login failed', { event: 'login_failed', email, reason: 'invalid_credentials' });
     return res.status(401).json({ message: 'Invalid credentials' });
   }
+
+  logger.info('User login successful', { event: 'login', userId: user._id, email: user.email, method: 'password' });
 
   const token = generateToken(user._id);
   res.cookie('token', token, cookieOptions);
@@ -71,6 +78,7 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const logout = asyncHandler(async (req, res) => {
+  logger.info('User logout', { event: 'logout', userId: req.userId });
   res.clearCookie('token', cookieOptions);
   res.status(200).json({ message: 'Logged out' });
 });
@@ -111,6 +119,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.query;
 
   if (!token) {
+    logger.info('Email verification failed', { event: 'email_verify_failed', reason: 'invalid_or_expired_token' });
     return res.status(400).json({ message: 'Verification token is required' });
   }
 
@@ -120,6 +129,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
   });
 
   if (!user) {
+    logger.info('Email verification failed', { event: 'email_verify_failed', reason: 'invalid_or_expired_token' });
     return res.status(400).json({ message: 'Invalid or expired verification link' });
   }
 
@@ -127,6 +137,8 @@ const verifyEmail = asyncHandler(async (req, res) => {
   user.verificationToken = undefined;
   user.verificationTokenExpires = undefined;
   await user.save();
+
+  logger.info('Email verified successfully', { event: 'email_verified', userId: user._id, email: user.email });
 
   res.status(200).json({ message: 'Email verified' });
 });
@@ -149,7 +161,7 @@ const resendVerification = asyncHandler(async (req, res) => {
   try {
     await sendVerificationEmail(user.email, verificationToken);
   } catch (err) {
-    console.error('Failed to send verification email on resend:', err);
+    logger.error('Failed to send verification email on resend:', { error: err.message, stack: err.stack });
     return res.status(500).json({ message: 'Failed to send verification email' });
   }
 
@@ -188,6 +200,7 @@ const changeEmail = asyncHandler(async (req, res) => {
     return res.status(409).json({ message: 'Email already in use' });
   }
 
+  const oldEmail = user.email;
   user.email = newEmail;
   user.isVerified = false;
 
@@ -200,9 +213,11 @@ const changeEmail = asyncHandler(async (req, res) => {
   try {
     await sendVerificationEmail(newEmail, verificationToken);
   } catch (err) {
-    console.error('Failed to send verification email on email change:', err);
+    logger.error('Failed to send verification email on email change:', { error: err.message, stack: err.stack });
     emailSendFailed = true;
   }
+
+  logger.info('User changed email address', { event: 'email_changed', userId: req.userId, oldEmail, newEmail });
 
   const userObj = user.toObject();
   delete userObj.password;
@@ -230,11 +245,15 @@ const deleteAccount = asyncHandler(async (req, res) => {
     }
   }
 
+  const email = user.email;
+
   // Delete all Analysis documents associated with this user
   await Analysis.deleteMany({ userId: req.userId });
 
   // Delete the User document
   await User.findByIdAndDelete(req.userId);
+
+  logger.info('User deleted account', { event: 'account_deleted', userId: req.userId, email });
 
   // Clear cookie
   res.clearCookie('token', cookieOptions);
