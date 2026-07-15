@@ -106,13 +106,12 @@ function Dashboard() {
       <main className="layout-container fade-in-slide" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         {user && !user.isVerified && <VerificationBanner />}
         <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
-          <span className="label-caps" style={{ display: 'inline-block', marginBottom: '0.5rem' }}>Signal Matching</span>
+          <span className="label-caps" style={{ display: 'inline-block', marginBottom: '0.5rem' }}>Compare Resume to Job Description</span>
           <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-            Align Your Frequencies
+            Paste or upload your resume and the job description
           </h2>
           <p style={{ opacity: 0.7, maxWidth: '600px', margin: '0 auto', fontSize: '0.95rem' }}>
-            Paste or upload your resume and the target job description to compute alignment,
-            view match metrics, and extract professional resonance.
+            Paste or upload your resume and the target job description to see matched skills, missing skills, and a fit verdict.
           </p>
         </div>
 

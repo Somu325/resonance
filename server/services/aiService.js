@@ -323,6 +323,8 @@ In determining the verdict and the supporting reasons, evaluate the details in t
 2. Total years of work experience as a signal of seniority match for the role.
 3. Any HIGH severity quality flags as a mitigating factor (e.g. strong skill match but resume has unexplained gaps or critical issues). Do NOT let low/medium severity flags dominate the verdict, they are minor.
 
+Write reasons in plain, direct language. Do not use metaphors, technical jargon, or abstract terms like 'signal', 'frequency', 'resonance', 'alignment', or 'overlap' — state facts plainly, e.g. 'Has 8 of 12 required skills' not 'Strong frequency alignment with role requirements'.
+
 Return ONLY valid JSON in this exact shape, containing exactly 3 short, concise reasons supporting the verdict:
 {"verdict": "Almost There", "reasons": ["reason1", "reason2", "reason3"]}
 `;
@@ -399,6 +401,7 @@ ${relevantFlags.map(f => `- [${f.severity.toUpperCase()}] Section: ${f.section},
 Instructions:
 - Provide exactly one concrete, actionable suggestion for each missing skill listed under "Missing Skills". Explain how the candidate can demonstrate this skill on their resume or gain it.
 - Provide exactly one concrete, actionable suggestion for each quality flag listed under "Resume Quality Flags". Explain how to fix that specific issue.
+- Write suggestions in plain, direct language. Do not use metaphors, technical jargon, or abstract terms like 'signal', 'frequency', 'resonance', 'alignment', or 'overlap' — state facts plainly, e.g. 'Has 8 of 12 required skills' not 'Strong frequency alignment with role requirements'.
 - The output must be dynamically sized to however many gaps actually exist.
 - Return ONLY a valid JSON object matching this exact schema:
 {

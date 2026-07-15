@@ -54,8 +54,8 @@ export default function VerifyEmail() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
               <Spinner size="lg" />
               <div>
-                <h3 style={{ marginBottom: '0.5rem' }}>Calibrating credentials</h3>
-                <p style={{ opacity: 0.7, fontSize: '0.95rem' }}>Verifying your email signal signature...</p>
+                <h3 style={{ marginBottom: '0.5rem' }}>Verifying</h3>
+                <p style={{ opacity: 0.7, fontSize: '0.95rem' }}>Confirming your email address...</p>
               </div>
             </div>
           </Card>

@@ -103,7 +103,7 @@ function Results() {
         <main className="layout-container" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             <Spinner size="lg" />
-            <p className="label-caps" style={{ opacity: 0.6 }}>Decompressing signal frequencies...</p>
+            <p className="label-caps" style={{ opacity: 0.6 }}>Analyzing...</p>
           </div>
         </main>
       </div>
@@ -120,7 +120,7 @@ function Results() {
           <div style={{ width: '100%', maxWidth: '480px' }}>
             <EmptyState
               message={error || 'The requested analysis session could not be retrieved.'}
-              actionLabel="Compare New Signals"
+              actionLabel="Run a new comparison"
               onAction={() => navigate('/')}
             />
           </div>
@@ -189,8 +189,8 @@ function Results() {
         {/* Page title and date */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--color-mist)', paddingBottom: '1rem' }}>
           <div>
-            <span className="label-caps">[ COMPARISON RUN ]</span>
-            <h2 style={{ marginTop: '0.25rem' }}>Signal Calibration Report</h2>
+            <span className="label-caps">Analysis</span>
+            <h2 style={{ marginTop: '0.25rem' }}>Comparison Results</h2>
           </div>
           <span className="text-data" style={{ fontSize: '0.85rem', opacity: 0.6 }}>
             {new Date(analysis.createdAt).toLocaleDateString(undefined, { 
@@ -269,7 +269,7 @@ function Results() {
             {/* Left side text explanation */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <span className="label-caps" style={{ opacity: 0.6 }}>Overlap Quotient</span>
+                <span className="label-caps" style={{ opacity: 0.6 }}>Match Percentage</span>
                 <div style={{ display: 'flex', alignItems: 'baseline', marginTop: '0.5rem' }}>
                   <span className="text-data" style={{ fontSize: '4.5rem', fontWeight: '800', lineHeight: 1, color: 'var(--color-ink)' }}>
                     {matchPercentage}
@@ -281,7 +281,7 @@ function Results() {
               </div>
               
               <p style={{ fontSize: '0.95rem', opacity: 0.7, margin: 0, lineHeight: '1.6' }}>
-                The overlap coefficient indicates how well your candidate credentials resonate with the core requirements of this role.
+                This percentage shows how many of the job's required skills are on your resume.
               </p>
             </div>
 
@@ -384,7 +384,7 @@ function Results() {
                       letterSpacing: '0.1em'
                     }}
                   >
-                    Overlap
+                    Match
                   </span>
                 </div>
               </div>
@@ -398,7 +398,7 @@ function Results() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1.25rem' }}>
             <div>
               <span className="label-caps" style={{ display: 'block', marginBottom: '0.5rem', opacity: 0.6 }}>
-                Alignment Verdict
+                Fit Verdict
               </span>
               <h3 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', fontWeight: '600', color: 'var(--color-ink)', margin: 0 }}>
                 {verdict}
@@ -423,15 +423,11 @@ function Results() {
             >
               {verdict}
             </span>
-            
-            <p style={{ fontSize: '0.9rem', opacity: 0.7, margin: 0, lineHeight: '1.5' }}>
-              AI analysis of qualitative skills suggests the overall frequency alignment of your resume matches the role's current demand stage.
-            </p>
           </div>
 
           {/* Right panel: Bulleted reasons list */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <span className="label-caps" style={{ opacity: 0.6 }}>Alignment Rationale</span>
+            <span className="label-caps" style={{ opacity: 0.6 }}>Reasons</span>
             <ul style={{ 
               listStyleType: 'none', 
               paddingLeft: 0, 
@@ -602,7 +598,7 @@ function Results() {
           {/* Matched Skills Card */}
           <Card>
             <div style={{ borderBottom: '1px solid var(--color-mist)', paddingBottom: '0.75rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="label-caps" style={{ color: 'var(--color-moss)' }}>Matched Frequencies</span>
+              <span className="label-caps" style={{ color: 'var(--color-moss)' }}>Matched Skills</span>
               <span className="text-data" style={{ fontSize: '0.8rem', color: 'var(--color-moss)', fontWeight: '600' }}>
                 [{matchedSkills?.length || 0}]
               </span>
@@ -621,7 +617,7 @@ function Results() {
           {/* Missing Skills Card */}
           <Card>
             <div style={{ borderBottom: '1px solid var(--color-mist)', paddingBottom: '0.75rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="label-caps" style={{ color: 'var(--color-clay)' }}>Unresolved Frequencies</span>
+              <span className="label-caps" style={{ color: 'var(--color-clay)' }}>Missing Skills</span>
               <span className="text-data" style={{ fontSize: '0.8rem', color: 'var(--color-clay)', fontWeight: '600' }}>
                 [{missingSkills?.length || 0}]
               </span>
@@ -642,7 +638,7 @@ function Results() {
         <Card style={{ padding: '2rem' }}>
           <div style={{ borderBottom: '1px solid var(--color-mist)', paddingBottom: '0.75rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div>
-              <span className="label-caps">[ MATCH OPTIMIZATION ]</span>
+              <span className="label-caps">Suggestions</span>
               <h3 style={{ fontSize: '1.5rem', marginTop: '0.25rem' }}>Actionable Recommendations</h3>
             </div>
             {/* Show usage text */}

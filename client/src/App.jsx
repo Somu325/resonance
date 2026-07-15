@@ -28,7 +28,7 @@ function AppContent() {
       >
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
           <Spinner size="lg" />
-          <p className="label-caps" style={{ opacity: 0.6 }}>Synchronizing signal frequencies...</p>
+          <p className="label-caps" style={{ opacity: 0.6 }}>Loading...</p>
         </div>
       </div>
     );

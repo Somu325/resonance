@@ -18,7 +18,7 @@ export default function QualityFlagList({ flags = [] }) {
         }}
       >
         <span style={{ fontSize: '1.1rem' }}>✓</span>
-        <span>No issues flagged. Resonance alignment is structurally sound.</span>
+        <span>No issues found.</span>
       </div>
     );
   }

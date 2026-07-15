@@ -188,21 +188,21 @@ function SignalWaveform({ matchPercentage = 0 }) {
 
         {/* Signal Source Indicators */}
         <text x="55" y="42" className="label-caps" fill="var(--color-clay)" opacity="0.8" fontSize="10">
-          [Resume Signal]
+          Resume
         </text>
         <text x="745" y="42" className="label-caps" fill="var(--color-ink)" opacity="0.6" textAnchor="end" fontSize="10">
-          [JD Frequency]
+          Job Description
         </text>
 
         {hasOverlap ? (
           <g>
             <text x="400" y="210" className="label-caps text-data" fill="var(--color-moss)" textAnchor="middle" fontSize="11" fontWeight="600">
-              Resonance Overlap: {matchPercentage}%
+              Skills Match: {matchPercentage}%
             </text>
           </g>
         ) : (
           <text x="400" y="210" className="label-caps" fill="var(--color-clay)" textAnchor="middle" fontSize="11">
-            No Resonance / 0% Overlap
+            No Match / 0% Match
           </text>
         )}
       </svg>

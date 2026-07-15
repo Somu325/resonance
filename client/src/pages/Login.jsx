@@ -95,7 +95,7 @@ function Login() {
             <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', fontWeight: '700' }}>
               Resonance
             </h1>
-            <p className="label-caps">[ Resume Signal Matcher ]</p>
+            <p className="label-caps">Resonance</p>
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>

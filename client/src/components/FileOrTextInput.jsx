@@ -173,7 +173,7 @@ export default function FileOrTextInput({
           </button>
         </div>
         <span className="text-data" style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '0.75rem' }}>
-          [{label ? label.toUpperCase() : 'SIGNAL'}]
+          [{label ? label.toUpperCase() : 'INPUT'}]
         </span>
       </div>
 
@@ -239,7 +239,7 @@ export default function FileOrTextInput({
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
                 <Spinner size="md" />
                 <span className="text-data" style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                  Extracting text signal...
+                  Extracting text...
                 </span>
               </div>
             ) : (

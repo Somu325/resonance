@@ -116,8 +116,8 @@ function History() {
           }}
         >
           <div>
-            <span className="label-caps">[ DIARY LOG ]</span>
-            <h2 style={{ marginTop: '0.25rem' }}>Calibration History</h2>
+            <span className="label-caps">History</span>
+            <h2 style={{ marginTop: '0.25rem' }}>Past Comparisons</h2>
           </div>
           <span className="text-data" style={{ fontSize: '0.9rem', opacity: 0.7 }}>
             Total Comparisons: {history.length}
@@ -138,7 +138,7 @@ function History() {
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
               <Spinner size="lg" />
-              <p className="label-caps" style={{ opacity: 0.6 }}>Scanning local logs...</p>
+              <p className="label-caps" style={{ opacity: 0.6 }}>Loading...</p>
             </div>
           </div>
         ) : history.length === 0 ? (

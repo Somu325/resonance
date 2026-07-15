@@ -108,7 +108,7 @@ function Signup() {
             <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', fontWeight: '700' }}>
               Resonance
             </h1>
-            <p className="label-caps">[ Create Signal Profile ]</p>
+            <p className="label-caps">Create your account</p>
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
