@@ -45,6 +45,14 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
+  deletedAt: {
+    type: Date,
+    required: false,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

@@ -22,6 +22,9 @@ const signup = asyncHandler(async (req, res) => {
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
+    if (existingUser.isDeleted) {
+      return res.status(403).json({ message: 'This email is no longer available for new accounts.' });
+    }
     return res.status(409).json({ message: 'Email already in use' });
   }
 
@@ -58,7 +61,7 @@ const login = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findOne({ email });
-  if (!user) {
+  if (!user || user.isDeleted) {
     logger.info('User login failed', { event: 'login_failed', email, reason: 'invalid_credentials' });
     return res.status(401).json({ message: 'Invalid credentials' });
   }
@@ -255,8 +258,10 @@ const deleteAccount = asyncHandler(async (req, res) => {
   // Delete all Analysis documents associated with this user
   await Analysis.deleteMany({ userId: req.userId });
 
-  // Delete the User document
-  await User.findByIdAndDelete(req.userId);
+  // Soft-delete the User document instead of findByIdAndDelete
+  user.isDeleted = true;
+  user.deletedAt = new Date();
+  await user.save();
 
   logger.info('User deleted account', { event: 'account_deleted', userId: req.userId, email });
 

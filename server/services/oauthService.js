@@ -18,6 +18,11 @@ async function findOrCreateOAuthUser({ provider, providerId, email }) {
   // This handles recurring OAuth log-ins for the same provider.
   const existingUserById = await User.findOne({ [idField]: providerId });
   if (existingUserById) {
+    if (existingUserById.isDeleted) {
+      const err = new Error("This email is no longer available for new accounts.");
+      err.statusCode = 403;
+      throw err;
+    }
     if (!existingUserById.isVerified) {
       existingUserById.isVerified = true;
       await existingUserById.save();
@@ -38,6 +43,11 @@ async function findOrCreateOAuthUser({ provider, providerId, email }) {
   if (email) {
     const existingUserByEmail = await User.findOne({ email });
     if (existingUserByEmail) {
+      if (existingUserByEmail.isDeleted) {
+        const err = new Error("This email is no longer available for new accounts.");
+        err.statusCode = 403;
+        throw err;
+      }
       existingUserByEmail[idField] = providerId;
       existingUserByEmail.isVerified = true;
       await existingUserByEmail.save();
