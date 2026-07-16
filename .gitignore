@@ -29,3 +29,8 @@ yarn-error.log*
 
 # Application logs
 server/logs/
+
+# Firebase, Claude, and Agent cache/metadata
+.firebase/
+.claude/
+.agents/

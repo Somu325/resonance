@@ -33,6 +33,8 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -80,6 +82,7 @@ function Login() {
       showToast('Welcome back!', 'success');
       navigate('/');
     } catch (err) {
+      console.error('Login error:', err);
       const errMsg = err.response?.data?.message || (err.request ? 'Connection to server failed. Please check your internet connection.' : 'Login failed. Please check your credentials.');
       showToast(errMsg, 'error');
     } finally {
@@ -142,7 +145,7 @@ function Login() {
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <Button
               variant="secondary"
-              onClick={() => window.location.href = 'http://localhost:5000/api/auth/github'}
+              onClick={() => window.location.href = `${API_URL}/auth/github`}
               style={{ flex: 1 }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
@@ -152,7 +155,7 @@ function Login() {
             </Button>
             <Button
               variant="secondary"
-              onClick={() => window.location.href = 'http://localhost:5000/api/auth/google'}
+              onClick={() => window.location.href = `${API_URL}/auth/google`}
               style={{ flex: 1 }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
