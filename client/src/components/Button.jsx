@@ -8,6 +8,7 @@ export default function Button({
   type = 'button',
   children,
   className = '',
+  loadingText,
   ...props
 }) {
   const variantClasses = {
@@ -24,17 +25,15 @@ export default function Button({
       type={type}
       onClick={onClick}
       disabled={isInteractionDisabled}
-      className={`btn ${selectedVariant} relative ${className}`}
+      className={`btn ${selectedVariant} flex items-center justify-center gap-2 ${className}`}
       {...props}
     >
-      <span className={loading ? 'invisible' : ''}>
-        {children}
-      </span>
       {loading && (
-        <span className="absolute inset-0 flex items-center justify-center">
-          <Spinner size="sm" />
-        </span>
+        <Spinner size="sm" className="border-current" />
       )}
+      <span>
+        {loading ? (loadingText || children) : children}
+      </span>
     </button>
   );
 }

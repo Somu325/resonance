@@ -661,6 +661,7 @@ function Results() {
                 variant="secondary"
                 onClick={handleGetSuggestions}
                 loading={loadingSuggestions}
+                loadingText="Generating Suggestions..."
                 disabled={isSuggestionsLimitReached}
                 style={{ minWidth: '280px' }}
               >

@@ -172,14 +172,15 @@ function Dashboard() {
             <Button
               type="submit"
               loading={analyzing}
+              loadingText="Analyzing..."
               disabled={!resumeText.trim() || !jdText.trim() || isLimitReached}
               style={{ padding: '1rem 3rem', fontSize: '1.05rem', minWidth: '280px' }}
             >
               Analyze Alignment
             </Button>
-            <p className="label-caps" style={{ fontSize: '0.65rem', opacity: 0.5 }}>
+            {/* <p className="label-caps" style={{ fontSize: '0.65rem', opacity: 0.5 }}>
               Powered by Advanced Natural Language Processing
-            </p>
+            </p> */}
           </div>
         </form>
       </main>

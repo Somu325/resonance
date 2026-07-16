@@ -160,6 +160,7 @@ function Signup() {
             <Button
               type="submit"
               loading={submitting}
+              loadingText="Registering..."
               variant="primary"
               style={{ width: '100%', marginTop: '0.5rem' }}
             >

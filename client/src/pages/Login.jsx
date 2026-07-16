@@ -129,6 +129,7 @@ function Login() {
             <Button
               type="submit"
               loading={submitting}
+              loadingText="Signing In..."
               variant="primary"
               style={{ width: '100%', marginTop: '0.5rem' }}
             >

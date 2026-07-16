@@ -141,7 +141,7 @@ export default function Settings() {
               />
             )}
 
-            <Button type="submit" loading={emailLoading} style={{ marginTop: '0.5rem', alignSelf: 'flex-start' }}>
+            <Button type="submit" loading={emailLoading} loadingText="Updating..." style={{ marginTop: '0.5rem', alignSelf: 'flex-start' }}>
               Update Email
             </Button>
           </form>
@@ -182,7 +182,7 @@ export default function Settings() {
               )}
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                <Button variant="danger" type="submit" loading={deleteLoading}>
+                <Button variant="danger" type="submit" loading={deleteLoading} loadingText="Deleting...">
                   Permanently Delete My Account
                 </Button>
                 <Button variant="secondary" onClick={() => { setShowDeleteConfirm(false); setDeletePassword(''); }}>
